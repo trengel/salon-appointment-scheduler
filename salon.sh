@@ -20,17 +20,30 @@ MAIN_MENU() {
   else
     echo -e "\nWhat's your phone number?"
     read CUSTOMER_PHONE
-    CUSTOMER_NAME=$($PSQL "SELECT name FROM customers WHERE phone = '$CUSTOMER_PHONE'")
+    EXISTING_CUSTOMER_NAME=$($PSQL "SELECT name FROM customers WHERE phone = '$CUSTOMER_PHONE'")
     # phone number doesn't exist, ask for name
-    if [[ -z $CUSTOMER_NAME ]]
+    if [[ -z $EXISTING_CUSTOMER_NAME ]]
     then
       echo -e "\nLooks like you're a new customer. What's your name?"
-      read $CUSTOMER_NAME
-      # NAME_TO_INSERT=$($PSQL "INSERT INTO customers(name, phone) VALUES('$CUSTOMER_NAME', '$CUSTOMER_PHONE')")
+      read CUSTOMER_NAME
+      $($PSQL "INSERT INTO customers(name, phone) VALUES('$CUSTOMER_NAME', '$CUSTOMER_PHONE')")
+      TIME_PICKER
+    else
+      TIME_PICKER
     fi
   fi
-  # choose a time
+}
+
+TIME_PICKER() {
+  echo -e "\nWhat time would you like to make this appointment?"
+  read SERVICE_TIME
+  GET_ID=$($PSQL "SELECT customer_id FROM customers WHERE phone = '$CUSTOMER_PHONE'")
+  $($PSQL "INSERT INTO appointments(time, customer_id, service_id) VALUES('$SERVICE_TIME', '$GET_ID', '$SERVICE_ID_SELECTED')")
   # confirm appointment details
+  GET_SERVICE=$($PSQL "SELECT name FROM services WHERE service_id = $SERVICE_ID_SELECTED")
+  GET_TIME=$($PSQL "SELECT time FROM appointments INNER JOIN customers USING(customer_id) WHERE phone = '$CUSTOMER_PHONE' AND service_id = '$SERVICE_ID_SELECTED'")
+  GET_NAME=$($PSQL "SELECT name FROM customers WHERE phone = '$CUSTOMER_PHONE'")
+  echo -e "\nI have put you down for a $(echo $GET_SERVICE | sed 's/^ *//g') at $(echo $GET_TIME | sed 's/^ *//g'), $(echo $GET_NAME | sed 's/^ *//g')."
 }
 
 MAIN_MENU
